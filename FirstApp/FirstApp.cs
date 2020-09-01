@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace FirstApp
 {
@@ -70,25 +71,28 @@ namespace FirstApp
 		private void HandleOldMessage(FibonacciData data)
 		{ }
 
-		private async void HandleFibonacciMessage(FibonacciData data)
+		private void HandleFibonacciMessage(FibonacciData data)
 		{
-			try
+			Task.Run(() =>
 			{
-				Logger.WriteLog($"Received new value {data.Value} for calculation {data.CalculationId + 1}");
+				try
+				{
+					Logger.WriteLog($"Received new value {data.Value} for calculation {data.CalculationId + 1}");
 
-				FibonacciData next_data = context.CalculateNext(data);
-				Thread.Sleep(5000);
-				Logger.WriteLog($"Сalculated next value {next_data.Value} for calculation {data.CalculationId + 1}");
+					FibonacciData next_data = context.CalculateNext(data);
+					Thread.Sleep(5000);
+					Logger.WriteLog($"Сalculated next value {next_data.Value} for calculation {data.CalculationId + 1}");
 
-				await httpClient.PutAsync(target, next_data.ToStringContent());
+					httpClient.PutAsync(target, next_data.ToStringContent()).Wait();
 
-				Logger.WriteLog($"Sending next value {next_data.Value} for calculation {data.CalculationId + 1}");
-			}
-			catch (Exception ex)
-			{
-				Logger.WriteLog($"Calculation {data.CalculationId + 1} stopped.\nError occurred: " + ex.Message);
-				return;
-			}
+					Logger.WriteLog($"Next value {next_data.Value} for calculation {data.CalculationId + 1} has been sent");
+				}
+				catch (Exception ex)
+				{
+					Logger.WriteLog($"Calculation {data.CalculationId + 1} stopped.\nError occurred: " + ex.Message);
+					return;
+				}
+			});
 		}
 
 		private bool _disposed = false;
