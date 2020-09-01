@@ -37,7 +37,6 @@ namespace Fibonacci.Controllers
 				try
 				{
 					FibonacciData next_data = context.CalculateNext(data);
-					Thread.Sleep(5000);
 					Logger.WriteLog($"Сalculated next value {next_data.Value} for calculation {next_data.CalculationId + 1}");
 
 					using (IBus bus = RabbitHutch.CreateBus("host=localhost"))

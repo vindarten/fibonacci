@@ -80,7 +80,6 @@ namespace FirstApp
 					Logger.WriteLog($"Received new value {data.Value} for calculation {data.CalculationId + 1}");
 
 					FibonacciData next_data = context.CalculateNext(data);
-					Thread.Sleep(5000);
 					Logger.WriteLog($"Сalculated next value {next_data.Value} for calculation {data.CalculationId + 1}");
 
 					httpClient.PutAsync(target, next_data.ToStringContent()).Wait();
@@ -101,6 +100,7 @@ namespace FirstApp
 
 		public void Dispose()
 		{
+			Console.WriteLine("Dispose has been called");
 			Dispose(true);
 			GC.SuppressFinalize(this);
 		}
