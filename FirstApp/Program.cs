@@ -25,10 +25,13 @@ namespace FirstApp
 				return;
 			}
 
+			CancellationTokenSource cts = new CancellationTokenSource();
+			CancellationToken token = cts.Token;
 			using (FirstApp firstApp = new FirstApp(parser))
 			{
-				firstApp.Start();
+				firstApp.Start(token);
 				Console.ReadLine();
+				cts.Cancel();
 			}
 		}
 	}

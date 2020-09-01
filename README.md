@@ -1,5 +1,5 @@
 # Fibonacci
-Implementation of distributed computation of fibonacci numbers using REST Web API and MessageBus.
+Implementation of distributed computation of Fibonacci numbers using REST Web API and MessageBus.
 
 ## Usage
 ```

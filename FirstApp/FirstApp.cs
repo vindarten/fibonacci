@@ -28,29 +28,31 @@ namespace FirstApp
 			target = "http://" + config.target_address + ":" + config.target_port + "/api/fibonacci";
 		}
 
-		public void Start()
+		public void Start(CancellationToken token)
 		{
 			context = new FibonacciContext();
 
-			IBus bus = RabbitHutch.CreateBus("host=localhost");
-			
-			//bus.Receive<FibonacciData>("fibonacci", HandleOldMessage)
+			bus = RabbitHutch.CreateBus("host=localhost");
 
-			bus.Subscribe<FibonacciData>("fibonacci", HandleFibonacciMessage);
+			bus.SubscribeAsync<FibonacciData>("fibonacci", HandleFibonacciMessage);
 			Logger.WriteLog("Listening for messages is initialized");
 
 			httpClient = new HttpClient();
 
 			for (int i = 0; i < config.calc_num; ++i)
 			{
-				InitCalculationAsync(i);
+				InitCalculationAsync(i, token);
 			}
 		}
 
-		private async void InitCalculationAsync(int i)
+		private async void InitCalculationAsync(int i, CancellationToken token)
 		{
 			while (true)
 			{
+				if (token.IsCancellationRequested)
+				{
+					return;
+				}
 				try
 				{
 					Logger.WriteLog($"Try init calculation {i + 1}. Send request to {target}");
@@ -60,6 +62,10 @@ namespace FirstApp
 					Logger.WriteLog($"Calculation {i + 1} initialized successfully");
 					break;
 				}
+				catch (OperationCanceledException)
+				{
+					return;
+				}
 				catch (Exception ex)
 				{
 					Logger.WriteLog($"Failed to initialize calculation {i + 1}: " + ex.Message);
@@ -68,12 +74,9 @@ namespace FirstApp
 			}
 		}
 
-		private void HandleOldMessage(FibonacciData data)
-		{ }
-
-		private void HandleFibonacciMessage(FibonacciData data)
+		private Task HandleFibonacciMessage(FibonacciData data)
 		{
-			Task.Run(() =>
+			return Task.Run(() =>
 			{
 				try
 				{
@@ -100,7 +103,6 @@ namespace FirstApp
 
 		public void Dispose()
 		{
-			Console.WriteLine("Dispose has been called");
 			Dispose(true);
 			GC.SuppressFinalize(this);
 		}
